@@ -1,0 +1,1 @@
+docker build -t wav2vec2:cpu -f .docker/wav2vec2-CPU.Dockerfile .
