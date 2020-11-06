@@ -25,4 +25,8 @@ RUN pip install -v --no-cache-dir --global-option="--cpp_ext" --global-option="-
   --global-option="--deprecated_fused_adam" --global-option="--xentropy" \
   --global-option="--fast_multihead_attn" ./ && python -c "import apex"
 
+
+WORKDIR /root
+RUN apt-get update -y && apt-get install -y sox libsox-dev libsox-fmt-all && git clone https://github.com/facebookresearch/WavAugment.git && cd WavAugment && python setup.py develop
+
 WORKDIR /root/fairseq
