@@ -18,3 +18,5 @@ RUN mkdir data
 WORKDIR /root/fairseq
 RUN git checkout develop
 RUN pip install --editable ./ && python examples/speech_recognition/infer.py --help
+
+RUN apt-get update -y && apt-get install -y sox libsox-dev libsox-fmt-all && git clone https://github.com/facebookresearch/WavAugment.git && cd WavAugment && python setup.py develop
