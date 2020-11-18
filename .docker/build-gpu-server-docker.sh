@@ -1,0 +1,1 @@
+docker build -t mychiux413/wav2vec2:cuda-10.2-server -f .docker/wav2vec2-CUDA-10.2-server.Dockerfile .

@@ -1,0 +1,1 @@
+docker build -t mychiux413/wav2vec2:cpu-server -f .docker/wav2vec2-CPU-server.Dockerfile .
