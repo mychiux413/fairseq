@@ -43,17 +43,27 @@ def do_resample(arr, from_sr, to_sr):
     return new_arr
 
 
-@app.route("/stt", methods=["POST", "GET"])
+@app.route("/stt", methods=["POST"])
 def stt():
     models = app.config.get("_models")
     generator = app.config.get("_generator")
     target_dict = app.config.get("_target_dict")
+    f = request.args.get('format')
 
     data = request.get_data()
     psudo_file = BytesIO(data)
-    arr, sr = soundfile.read(psudo_file)
-    if sr != 16000:
-        arr = do_resample(arr, sr, 16000)
+
+    if f == 'raw':
+        arr, sr = soundfile.read(
+            psudo_file,
+            samplerate=16000,
+            channels=1,
+            subtype='PCM_16',
+            format='RAW')
+    else:
+        arr, sr = soundfile.read(psudo_file)
+        if sr != 16000:
+            arr = do_resample(arr, sr, 16000)
 
     feats = wav_to_feature(arr)
 
@@ -69,16 +79,29 @@ def stt():
     sample["net_input"] = net_input
 
     with torch.no_grad():
+        encoder_input = {
+            k: v for k, v in net_input.items() if k != "prev_output_tokens"
+        }
+        emissions = generator.get_emissions(models, encoder_input)
+
         hypo = generator.generate(models, sample, prefix_tokens=None)
 
     hyp_pieces = target_dict.string(hypo[0][0]["tokens"].int().cpu())
-    return post_process(hyp_pieces, 'letter')
+
+    result = post_process(hyp_pieces, 'letter')
+
+    return result.lower()
 
 
 @app.route("/health", methods=["GET"])
 def health():
     return "1"
 
+
+@app.route("/config-id", methods=["GET"])
+def config_id():
+    return app.config.get("_config_id", "")
+    
 # @app.route("/warmup", methods=["GET"])
 # def warmup():
     
@@ -146,6 +169,18 @@ output units",
         type=str,
         default=None,
         help="dict path",
+    )
+    parser.add_argument(
+        "--server-port",
+        type=int,
+        default=5000,
+        help="fairseq server port",
+    )
+    parser.add_argument(
+        "--config-id",
+        type=str,
+        default="",
+        help="config ID",
     )
     return parser
 
@@ -352,13 +387,14 @@ def main(args):
 
     target_dict = Dictionary.load(args.dictionary)
     app.config["_target_dict"] = target_dict
+    app.config["_config_id"] = args.config_id
 
     # hypos = task.inference_step(generator, models, sample, prefix_tokens)
 
     # sample = dict()
     # net_input = dict()
 
-    server = pywsgi.WSGIServer(('0.0.0.0', 5000), app)
+    server = pywsgi.WSGIServer(('0.0.0.0', args.server_port), app)
     server.serve_forever()
 
 
