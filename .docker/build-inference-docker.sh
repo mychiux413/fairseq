@@ -1,0 +1,1 @@
+docker build -t mychiux413/wav2vec2:inference -f .docker/wav2vec2-Inference.Dockerfile .

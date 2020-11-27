@@ -13,7 +13,7 @@ RUN pip install --upgrade pip && pip install tensorboardX soundfile packaging py
 
 WORKDIR /root
 ENV FAIRSEQ_BRANCH=develop
-RUN git clone https://github.com/mychiux413/fairseq.git && echo "uncache 201106-3"
+RUN git clone https://github.com/mychiux413/fairseq.git && echo "uncache 201123"
 RUN git clone https://github.com/NVIDIA/apex
 RUN mkdir data
 
